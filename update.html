@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update Employee</title>
+    <style>
+      form {
+        max-width: 400px;
+        margin: 50px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      label,
+      input,
+      button {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Update Employee Attendance</h1>
+    <form id="updateForm" onsubmit="updateEmployee(event)">
+      <label for="employeeName">Employee Name</label>
+      <input type="text" id="employeeName" name="employeeName" disabled />
+
+      <div id="attendanceForm"></div>
+
+      <button type="submit">Update Attendance</button>
+    </form>
+
+    <script>
+      window.onload = function () {
+        const employeeData =
+          JSON.parse(localStorage.getItem("employees")) || [];
+        const empToUpdate = JSON.parse(
+          localStorage.getItem("employeeToUpdate")
+        );
+        if (empToUpdate) {
+          const { index, name, attendance } = empToUpdate;
+          document.getElementById("employeeName").value = name;
+
+          // Render attendance form fields dynamically for existing dates and statuses
+          const attendanceForm = document.getElementById("attendanceForm");
+          for (let date in attendance) {
+            attendanceForm.innerHTML += `
+            <label for="attendance-${date}">${date}</label>
+            <select id="attendance-${date}" name="attendance-${date}">
+              <option value="Present" ${
+                attendance[date] === "Present" ? "selected" : ""
+              }>Present</option>
+              <option value="Absent" ${
+                attendance[date] === "Absent" ? "selected" : ""
+              }>Absent</option>
+            </select>
+          `;
+          }
+        }
+      };
+
+      function updateEmployee(event) {
+        event.preventDefault();
+        const employeeData =
+          JSON.parse(localStorage.getItem("employees")) || [];
+        const empToUpdate = JSON.parse(
+          localStorage.getItem("employeeToUpdate")
+        );
+        const { index } = empToUpdate;
+
+        // Create updated attendance object
+        const updatedAttendance = {};
+
+        // Loop through each attendance field and update the status (Preserve dates)
+        const attendanceSelects = document.querySelectorAll(
+          '[id^="attendance-"]'
+        );
+        attendanceSelects.forEach((select) => {
+          const date = select.id.replace("attendance-", ""); // Get the full date from the ID without splitting
+          updatedAttendance[date] = select.value; // Update only the status for that date
+        });
+
+        // Replace the old attendance with the updated status for the same dates
+        employeeData[index].attendance = updatedAttendance;
+
+        // Save the updated employee data back to localStorage
+        localStorage.setItem("employees", JSON.stringify(employeeData));
+
+        // After updating, close the update window
+        window.close();
+      }
+    </script>
+  </body>
+</html>
